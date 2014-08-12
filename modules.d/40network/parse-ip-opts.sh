@@ -21,22 +21,7 @@ if [ -n "$netroot" ] && [ -z "$(getarg ip=)" ] && [ -z "$(getarg BOOTIF=)" ]; th
     return;
 fi
 
-# Count ip= lines to decide whether we need bootdev= or not
-if [ -z "$NEEDBOOTDEV" ] ; then
-    count=0
-    for p in $(getargs ip=); do
-        count=$(( $count + 1 ))
-    done
-    [ $count -gt 1 ] && NEEDBOOTDEV=1
-fi
-unset count
-
-# If needed, check if bootdev= contains anything usable
 BOOTDEV=$(getarg bootdev=)
-
-if [ -n "$NEEDBOOTDEV" ] ; then
-    [ -z "$BOOTDEV" ] && warn "Please supply bootdev argument for multiple ip= lines"
-fi
 
 # Check ip= lines
 # XXX Would be nice if we could errorcheck ip addresses here as well
