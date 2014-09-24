@@ -31,10 +31,43 @@ installkernel() {
     hostonly='' instmods nfs sunrpc ipv6 nfsv2 nfsv3 nfsv4 nfs_acl nfs_layout_nfsv41_files lockd rpcsec_gss_krb5 auth_rpcgss
 }
 
+cmdline() {
+    nfs_device_path="$(probe_nfsroot_device)"
+    nfs_device="${nfs_device_path%%:*}"
+    [ -z "$nfs_device" ] && return
+    if [[ $nfs_device = [0-9]*\.[0-9]*\.[0-9]*.[0-9]* ]] || [[ $nfs_device = \[.*\] ]]; then
+	nfs_address="$nfs_device"
+    else
+        lookup=$(host $(echo ${nfs_device%%:*})| head -n1)
+        nfs_address=${lookup##* }
+    fi
+    ifname=$(ip -o route get to $nfs_address | sed -n 's/.*dev \([^ ]*\).*/\1/p')
+    printf ' ip=%s:static ' ${ifname}
+
+}
+
+probe_nfsroot_device () {
+    while read line ; do
+        set -- $line
+        path=$5
+        fstype=$9
+        device=${10}
+
+        if [ "x${path}" = "x/" ] &&
+           [ "x${fstype}" = "xnfs" -o "x${fstype}" = "xnfs4" ] ; then
+            echo "$device"
+            return
+        fi
+    done
+} </proc/self/mountinfo
+
 # called by dracut
 install() {
     local _i
     local _nsslibs
+    local _netconf="$(cmdline)"
+    [[ $_netconf ]] && printf "%s\n" "$_netconf" >> "${initdir}/etc/cmdline.d/95nfs.conf"
+	
     inst_multiple -o portmap rpcbind rpc.statd mount.nfs \
         mount.nfs4 umount rpc.idmapd sed /etc/netconfig
     inst_multiple /etc/services /etc/nsswitch.conf /etc/rpc /etc/protocols /etc/idmapd.conf
