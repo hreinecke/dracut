@@ -49,6 +49,6 @@ if [ ! -L $ROOT/var/lock -a -e $ROOT/var/lock ]; then
     ln -sfn ../run/lock $ROOT/var/lock
 fi
 
-if [ $WAR_RO -eq 1 ];then
+if [ $WAS_RO -eq 1 ];then
     mount $ROOT -o remount,ro
 fi
