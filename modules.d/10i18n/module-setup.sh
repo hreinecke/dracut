@@ -198,7 +198,12 @@ install() {
         if [[ ${FONT_MAP} ]]
         then
             FONT_MAP=${FONT_MAP%.trans}
-            inst_simple ${kbddir}/consoletrans/${FONT_MAP}.trans
+            if [ -f "${FONT_MAP}".trans ]; then
+                inst_simple ${kbddir}/consoletrans/${FONT_MAP}.trans
+            else if [ -f "$FONT_MAP" ]; then
+                inst_simple ${kbddir}/consoletrans/${FONT_MAP}
+                fi
+            fi
         fi
 
         if [[ ${FONT_UNIMAP} ]]
