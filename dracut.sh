@@ -305,11 +305,17 @@ dropindirs_sort()
 rearrange_params()
 {
     # Workaround -i, --include taking 2 arguments
-    set -- "${@/--include/++include}"
-
-    # This prevents any long argument ending with "-i"
-    # -i, like --opt-i but I think we can just prevent that
-    set -- "${@/%-i/++include}"
+    COUNTER=0
+    for var in "$@"; do
+        if [ "$var" = "-i" ] || [ "$var" = "--include" ]; then
+            if [ $COUNTER -eq 0 ]; then
+                set -- "++include" "${@:2}"
+            else
+                set -- "${@:1:$COUNTER}" "++include" "${@:$((COUNTER+2))}"
+            fi
+        fi
+        (( COUNTER++ ))
+    done
 
     TEMP=$(unset POSIXLY_CORRECT; getopt \
         -o "a:m:o:d:I:k:c:L:fvqlHhMN" \
