@@ -43,7 +43,6 @@ install() {
         $systemdutildir/systemd-sysctl \
         $systemdutildir/systemd-modules-load \
         $systemdutildir/systemd-vconsole-setup \
-        $systemdutildir/system-generators/systemd-fstab-generator \
         $systemdutildir/system-generators/systemd-gpt-auto-generator \
         \
         $systemdsystemunitdir/cryptsetup.target \
@@ -193,6 +192,7 @@ install() {
     inst_script "$moddir/dracut-pre-pivot.sh" /bin/dracut-pre-pivot
 
     inst_script "$moddir/rootfs-generator.sh" $systemdutildir/system-generators/dracut-rootfs-generator
+    inst_simple "$systemdutildir/system-generators/systemd-fstab-generator" $systemdutildir/system-generator-helper/systemd-fstab-generator
 
     inst_binary true
     ln_r $(type -P true) "/usr/bin/loginctl"

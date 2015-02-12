@@ -47,7 +47,16 @@ generator_mount_rootfs()
 
     _name=$(dev_unit_name "$1")
     [ -d /run/systemd/generator ] || mkdir -p /run/systemd/generator
-    if ! [ -f /run/systemd/generator/sysroot.mount ]; then
+
+    #only run systemd-fstab-generator if root= and rootflags= are present
+    if [ $(sed -n  '/root=/!{q1}') ] && [ $(getarg rootflags=) ]; then
+        /usr/lib/systemd/system-generator-helper/systemd-fstab-generator /run/systemd/generator NULL NULL
+    else
+        #make sure that the initial mount is ro
+        for i in $(echo $_flags | sed 's/,/ /g'); do
+           [[ $i == rw ]] || [[ $i == ro ]] || rootflags="$rootflags,$i"
+        done
+        _flags=" ${rootflags#,},ro"
         {
             echo "[Unit]"
             echo "Before=initrd-root-fs.target"
@@ -113,7 +122,7 @@ if [ "${root%%:*}" = "block" ]; then
    generator_wait_for_dev "${root#block:}" "$RDRETRY"
    generator_fsck_after_pre_mount "${root#block:}"
    cmdline=$(</proc/cmdline)
-   test "$cmdline" = "${cmdline#*root=}" && generator_mount_rootfs "${root#block:}" "$(getarg rootfstype=)" "$(getarg rootflags=)"
+   generator_mount_rootfs "${root#block:}" "$(getarg rootfstype=)" "$(getarg rootflags=)"
 fi
 
 exit 0
